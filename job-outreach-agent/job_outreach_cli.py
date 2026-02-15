@@ -73,6 +73,30 @@ def extract_from_image(image_path: str, openai_api_key: str) -> dict:
 
     print(f"✓ Extracted: {result.get('company_name')} - {result.get('role')}")
 
+    # Ask for additional context (optional)
+    print("\n" + "="*60)
+    print("📝 Additional Context (Optional)")
+    print("="*60)
+    print("You can provide extra information to personalize the outreach:")
+    print("  - What specifically interests you about this role")
+    print("  - Why you're reaching out")
+    print("  - Any specific points you want to emphasize")
+    print("  - Personal connection to the company")
+    print("  - Or any other custom instructions")
+    print("\nPress Enter to skip, or type your notes:")
+    print("-" * 60)
+
+    try:
+        additional_context = input().strip()
+        if additional_context:
+            result['user_context'] = additional_context
+            print(f"\n✓ Added your context ({len(additional_context)} characters)")
+        else:
+            print("\n✓ Skipped - using default approach")
+    except EOFError:
+        # Non-interactive mode, skip
+        pass
+
     return result
 
 
@@ -101,6 +125,30 @@ def extract_from_text(text_path: str, openai_api_key: str) -> dict:
     )
 
     print(f"✓ Extracted: {result.get('company_name')} - {result.get('role')}")
+
+    # Ask for additional context (optional)
+    print("\n" + "="*60)
+    print("📝 Additional Context (Optional)")
+    print("="*60)
+    print("You can provide extra information to personalize the outreach:")
+    print("  - What specifically interests you about this role")
+    print("  - Why you're reaching out")
+    print("  - Any specific points you want to emphasize")
+    print("  - Personal connection to the company")
+    print("  - Or any other custom instructions")
+    print("\nPress Enter to skip, or type your notes:")
+    print("-" * 60)
+
+    try:
+        additional_context = input().strip()
+        if additional_context:
+            result['user_context'] = additional_context
+            print(f"\n✓ Added your context ({len(additional_context)} characters)")
+        else:
+            print("\n✓ Skipped - using default approach")
+    except EOFError:
+        # Non-interactive mode, skip
+        pass
 
     return result
 

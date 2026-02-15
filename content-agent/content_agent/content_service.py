@@ -148,6 +148,13 @@ CRITICAL REQUIREMENTS:
 2. Professional and confident tone, but natural (not AI-generated sounding)
 3. Clear and specific subject line
 
+{f'''SPECIAL USER INSTRUCTIONS:
+   - The user has provided these additional notes/context: "{context.get('user_custom_context')}"
+   - PRIORITY: Incorporate this context thoughtfully throughout the email
+   - Use this to guide what you emphasize, mention, or focus on
+   - This represents what specifically interests the user or what they want to highlight
+''' if context.get('user_custom_context') else ''}
+
 4. SALUTATION:
    - If recipient name is provided, use: "Hi [Name] & Hiring Team,"
    - Otherwise use: "Dear Hiring Team,"

@@ -21,13 +21,14 @@ python job_outreach_cli.py /path/to/job_posting.txt
 
 That's it! The CLI will:
 1. ✅ Extract job info from your image/text (via extraction-agent using GPT-4o Vision)
-2. ✅ Research the company (via research-agent)
-3. ✅ Match with your profile
-4. ✅ Intelligently recommend email vs LinkedIn
-5. ✅ Generate personalized content (via content-agent)
-6. ✅ Show you the draft
-7. ✅ Ask for your approval
-8. ✅ Send email (via email-agent) or provide LinkedIn instructions (via linkedin-agent)
+2. ✅ Ask for optional additional context (what interests you, what to emphasize)
+3. ✅ Research the company (via research-agent)
+4. ✅ Match with your profile
+5. ✅ Intelligently recommend email vs LinkedIn
+6. ✅ Generate personalized content (via content-agent, incorporating your context)
+7. ✅ Show you the draft
+8. ✅ Ask for your approval
+9. ✅ Send email (via email-agent) or provide LinkedIn instructions (via linkedin-agent)
 
 ## Complete Example
 
@@ -52,6 +53,18 @@ Job Outreach Agent - Full Workflow
 📋 Step 1: Extracting job information...
 📸 Extracting job info from image: job_screenshot.png
 ✓ Extracted: Anthropic - Senior Software Engineer
+
+📝 Additional Context (Optional)
+You can provide extra information to personalize the outreach:
+  - What specifically interests you about this role
+  - Why you're reaching out
+  - Any specific points you want to emphasize
+
+Press Enter to skip, or type your notes:
+------------------------------------------------------------
+I'm interested in their AI safety work and want to emphasize my cost optimization achievements.
+
+✓ Added your context (109 characters)
 
 🤖 Step 2: Initializing orchestrator...
 

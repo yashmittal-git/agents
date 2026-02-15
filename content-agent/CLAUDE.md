@@ -65,7 +65,7 @@ Returns structured email with subject and body:
 
 **Parameters:**
 - `to_info`: Recipient details (name, company, role)
-- `context`: Email context (purpose, role, highlights)
+- `context`: Email context (purpose, role, highlights, optional `user_custom_context` for specific user instructions)
 - `sender_info`: Sender details (name, email, linkedin, phone, highlights, skills)
 - `max_words`: Word limit (default 250)
 
@@ -136,6 +136,7 @@ Flexible content generation for any purpose.
 ### Personalization
 - Uses recipient and sender details for context
 - References company research and specifics
+- Incorporates user's custom instructions when provided (via `context.user_custom_context`)
 - Tailors tone and style to purpose
 
 ### Length Control

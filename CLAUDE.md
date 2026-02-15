@@ -32,18 +32,23 @@ This system is built for **personal job search automation** to ease the process 
    - URL to job posting
    - Any other content containing job info
 
-2. **Processing**: System automatically:
+2. **Optional Context**: After extraction, user can provide additional notes:
+   - What specifically interests them about the role
+   - Points they want emphasized (e.g., cost optimization, scalability)
+   - Personal connections or custom instructions
+
+3. **Processing**: System automatically:
    - Extracts job information (company, role, requirements, contact info)
    - Researches the company
-   - Generates personalized outreach content
+   - Generates personalized outreach content (incorporating user's context)
    - Intelligently recommends communication channel (email/LinkedIn/WhatsApp)
 
-3. **Human-in-the-loop**: System always:
+4. **Human-in-the-loop**: System always:
    - Shows draft content for review
    - Asks for user confirmation before sending
    - Provides manual instructions for channels requiring manual action (LinkedIn, WhatsApp)
 
-4. **Output**: Based on recommendation:
+5. **Output**: Based on recommendation:
    - **Email**: Creates formatted email → user confirms → auto-sends via Gmail API (always BCCs user for record keeping)
    - **LinkedIn**: Generates message → provides step-by-step manual instructions
    - **WhatsApp**: Generates message → tells user to manually send

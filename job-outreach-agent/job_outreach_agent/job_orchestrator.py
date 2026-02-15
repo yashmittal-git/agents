@@ -302,7 +302,8 @@ class JobOrchestrator:
                     "company_info": company_research.get('what_they_build'),
                     "tech_stack": company_research.get('tech_stack'),
                     "candidate_highlights": experience_match.get('relevant_experience'),
-                    "latest_project_focus": "AI Voicebot platform with sub-second latency, scaled to 300K+ calls/day"
+                    "latest_project_focus": "AI Voicebot platform with sub-second latency, scaled to 300K+ calls/day",
+                    "user_custom_context": job_info.get('user_context')  # User's additional context/instructions
                 },
                 sender_info=self.user_profile,
                 max_words=250,
