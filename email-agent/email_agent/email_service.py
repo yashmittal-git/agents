@@ -8,7 +8,7 @@ import os
 import base64
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from typing import Optional
+from typing import Optional, Union, List
 from pathlib import Path
 
 from google.auth.transport.requests import Request
@@ -127,7 +127,7 @@ class EmailService:
 
     def create_message(
         self,
-        to: str,
+        to: Union[str, List[str]],
         subject: str,
         body: str,
         from_email: Optional[str] = None,
@@ -137,7 +137,7 @@ class EmailService:
         Create email message
 
         Args:
-            to: Recipient email
+            to: Recipient email(s) - can be a string or list of strings
             subject: Email subject
             body: Email body
             from_email: Sender email (defaults to sender_email from init)
@@ -147,7 +147,12 @@ class EmailService:
             Email message dict ready to send
         """
         message = MIMEMultipart()
-        message['To'] = to
+
+        # Handle multiple recipients
+        if isinstance(to, list):
+            message['To'] = ', '.join(to)
+        else:
+            message['To'] = to
 
         # Set From header
         sender = from_email or self.sender_email or "me"
@@ -169,7 +174,7 @@ class EmailService:
 
     def send(
         self,
-        to: str,
+        to: Union[str, List[str]],
         subject: str,
         body: str,
         from_email: Optional[str] = None,
@@ -179,7 +184,7 @@ class EmailService:
         Send email via Gmail API
 
         Args:
-            to: Recipient email
+            to: Recipient email(s) - can be a string or list of strings
             subject: Email subject
             body: Email body
             from_email: Sender email (optional)

@@ -21,6 +21,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from job_outreach_agent import JobOrchestrator
 from extraction_agent import ExtractionService
+from draft_viewer import view_draft
 
 
 def extract_from_image(image_path: str, openai_api_key: str) -> dict:
@@ -34,7 +35,7 @@ def extract_from_image(image_path: str, openai_api_key: str) -> dict:
     schema = {
         "company_name": "Company name",
         "role": "Job role/title",
-        "recruiter_email": "Recruiter email (if visible, else null)",
+        "recruiter_emails": "All recruiter/contact emails visible (as comma-separated list, or null if none)",
         "recruiter_linkedin": "LinkedIn profile URL (if visible, else null)",
         "recruiter_name": "Recruiter name (if visible, else null)",
         "requirements": "Job requirements (as string)"
@@ -44,8 +45,17 @@ def extract_from_image(image_path: str, openai_api_key: str) -> dict:
         content=image_path,
         content_type="image",
         schema=schema,
-        instructions="Extract job posting information from this image"
+        instructions="Extract job posting information from this image. IMPORTANT: Extract ALL visible email addresses, not just one."
     )
+
+    # Convert comma-separated emails to list and set primary
+    if result.get('recruiter_emails'):
+        emails = [e.strip() for e in result['recruiter_emails'].split(',') if e.strip()]
+        result['recruiter_email'] = emails[0] if emails else None  # Primary email
+        result['all_emails'] = emails  # All emails
+    else:
+        result['recruiter_email'] = None
+        result['all_emails'] = []
 
     print(f"✓ Extracted: {result.get('company_name')} - {result.get('role')}")
 
@@ -166,6 +176,19 @@ def main():
         job_info=job_info,
         auto_send=False  # Always ask for approval
     )
+
+    # Generate HTML view and open in browser
+    print("\n" + "="*60)
+    print("🌐 Opening draft in browser...")
+    print("="*60)
+
+    try:
+        html_path = view_draft(result['draft_file'], auto_open=True)
+        print(f"✅ Draft viewer opened in browser")
+        print(f"📄 HTML file: {html_path}")
+    except Exception as e:
+        print(f"⚠️  Could not open browser: {e}")
+        print(f"📄 Draft saved: {result['draft_file']}")
 
     # Step 4: Ask for approval
     print("\n" + "="*60)

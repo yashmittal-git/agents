@@ -374,8 +374,14 @@ class JobOrchestrator:
             # Use email-agent to send
             content = strategy['content']
 
+            # Get all email addresses (support multiple recipients)
+            to_emails = job_info.get('all_emails') or [job_info.get('recruiter_email')]
+            if not to_emails or not to_emails[0]:
+                print("❌ No recipient email addresses found")
+                return False
+
             success = self.email_agent.send(
-                to=job_info['recruiter_email'],
+                to=to_emails if len(to_emails) > 1 else to_emails[0],  # Pass list if multiple, string if single
                 subject=content['subject'],
                 body=content['body']
             )
