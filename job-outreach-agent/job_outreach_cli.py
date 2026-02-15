@@ -157,6 +157,7 @@ def main():
         "phone": os.getenv("USER_PHONE", "+91-9756251002"),
         "linkedin": os.getenv("USER_LINKEDIN", "linkedin.com/in/yashmittal-in"),
         "portfolio": os.getenv("USER_PORTFOLIO", "https://yashmittal.co.in"),
+        "resume": os.getenv("USER_RESUME", "https://resume.yashmittal.co.in"),
         "highlights": [
             "Built AI Voicebot platform with sub-second latency",
             "Scaled to 300K+ automated calls/day",

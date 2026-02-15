@@ -174,17 +174,26 @@ CRITICAL REQUIREMENTS:
      • <strong>45% cost reduction</strong> in TTS/LLM operations"
    - Keep formatting subtle and professional - don't overuse bold
 
-8. SIGNATURE:
+8. ADDITIONAL RESOURCES SECTION:
+   - After the call-to-action, add a brief section: "You can find more about my work here:"
+   - Include portfolio and resume links if available in sender_info
+   - Format as a clean list with clickable links
+   - Example:
+     <p>You can find more about my work here:<br>
+     • Portfolio: <a href="...">...</a><br>
+     • Resume: <a href="...">...</a></p>
+
+9. SIGNATURE:
    - DO NOT include any signature, closing, or contact info
    - DO NOT write "Best regards", "Sincerely", name, email, phone, etc.
-   - The body should END with the call-to-action or closing sentence
+   - The body should END with the additional resources section
    - Signature will be added programmatically - DO NOT DUPLICATE IT
 
-9. Clear call-to-action (suggest scheduling a conversation)
+10. Clear call-to-action (suggest scheduling a conversation)
 
 Return JSON with:
 - subject: Specific, compelling subject line (not generic)
-- body_html: Email body in HTML format with <strong> tags and bullet points (ENDS AFTER call-to-action, NO SIGNATURE OR CLOSING)"""
+- body_html: Email body in HTML format with <strong> tags and bullet points (ENDS AFTER additional resources section, NO SIGNATURE OR CLOSING)"""
 
         try:
             response = self.client.chat.completions.create(

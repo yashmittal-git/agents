@@ -77,6 +77,7 @@ def send_draft(draft_path: str):
         "phone": os.getenv("USER_PHONE", "+91-9756251002"),
         "linkedin": os.getenv("USER_LINKEDIN", "linkedin.com/in/yashmittal-in"),
         "portfolio": os.getenv("USER_PORTFOLIO", "https://yashmittal.co.in"),
+        "resume": os.getenv("USER_RESUME", "https://resume.yashmittal.co.in"),
     }
 
     orchestrator = JobOrchestrator(
