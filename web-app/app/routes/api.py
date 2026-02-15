@@ -10,7 +10,8 @@ Route organization:
 - /jobs/<id> (in jobs.py) → HTML page for viewing job details
 """
 from datetime import datetime
-from flask import Blueprint, jsonify, request
+import os
+from flask import Blueprint, jsonify, request, send_file
 from app.database import db
 from app.models import Job, Draft
 from app.tasks import send_email_task
@@ -98,3 +99,60 @@ def preview_draft(draft_id):
     """Preview email HTML (for iframe)"""
     draft = Draft.query.get_or_404(draft_id)
     return draft.body_html or draft.body_text or ''
+
+
+@bp.route('/jobs/<int:job_id>/source')
+def view_source(job_id):
+    """View the original source content (image, text, or URL)"""
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"view_source called for job_id: {job_id}")
+
+    job = Job.query.get_or_404(job_id)
+    logger.info(f"Job found: {job.company_name}, source_type: {job.source_type}, source_file: {job.source_file}")
+
+    if not job.source_file:
+        logger.warning(f"No source file for job {job_id}")
+        return jsonify({'error': 'No source file'}), 404
+
+    # Helper function to normalize file path
+    def normalize_path(file_path):
+        """Fix paths - handle both relative and absolute paths"""
+        # If it's a relative path (like 'uploads/file.png'), make it absolute
+        if not file_path.startswith('/'):
+            file_path = os.path.join('/app', file_path)
+
+        # Fix paths that have /app/app instead of /app
+        if file_path.startswith('/app/app/'):
+            file_path = file_path.replace('/app/app/', '/app/', 1)
+
+        return file_path
+
+    # For images, serve the file directly
+    if job.source_type == 'image':
+        file_path = normalize_path(job.source_file)
+        if os.path.exists(file_path):
+            return send_file(file_path)
+        else:
+            return jsonify({'error': f'File not found: {file_path}'}), 404
+
+    # For text, read and return the content
+    elif job.source_type == 'text':
+        file_path = normalize_path(job.source_file)
+        if os.path.exists(file_path):
+            with open(file_path, 'r') as f:
+                content = f.read()
+            return jsonify({
+                'type': 'text',
+                'content': content,
+                'filename': os.path.basename(file_path)
+            })
+        else:
+            return jsonify({'error': f'File not found: {file_path}'}), 404
+
+    # For URLs, return the URL
+    elif job.source_type == 'url':
+        return jsonify({
+            'type': 'url',
+            'url': job.source_file
+        })

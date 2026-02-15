@@ -221,7 +221,14 @@
                                 <dt class="text-sm font-medium text-gray-500">Source</dt>
                                 <dd class="mt-1 text-sm text-gray-900">
                                     <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 capitalize" x-text="jobData.source_type"></span>
-                                    <span class="ml-2 text-xs text-gray-500" x-show="jobData.source_file" x-text="jobData.source_file?.split('/').pop() || jobData.source_file"></span>
+                                    <button @click="viewSource" x-show="jobData.source_file" type="button"
+                                            class="ml-2 text-xs text-indigo-600 hover:text-indigo-800 underline cursor-pointer">
+                                        <span x-text="jobData.source_file?.split('/').pop() || jobData.source_file"></span>
+                                        <svg class="inline h-3 w-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                    </button>
                                 </dd>
                             </div>
                             <div>
@@ -273,8 +280,65 @@
                 </div>
             </div>
         </div>
+
+        <!-- Source Content Modal -->
+        <div x-show="showSourceModal" x-cloak
+     @keydown.escape.window="showSourceModal = false"
+     class="fixed inset-0 z-50 overflow-y-auto"
+     style="display: none;">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+         @click="showSourceModal = false"></div>
+
+    <!-- Modal Content -->
+    <div class="flex min-h-full items-center justify-center p-4">
+        <div class="relative bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+             @click.away="showSourceModal = false">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Original Source</h3>
+                <button @click="showSourceModal = false" type="button"
+                        class="text-gray-400 hover:text-gray-500">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Content -->
+            <div class="px-6 py-4 overflow-y-auto" style="max-height: calc(90vh - 120px);">
+                <!-- Image Content -->
+                <div x-show="sourceContentType === 'image'">
+                    <img :src="sourceContent" alt="Job Source" class="max-w-full h-auto rounded-lg shadow-sm">
+                </div>
+
+                <!-- Text Content -->
+                <div x-show="sourceContentType === 'text'">
+                    <pre class="whitespace-pre-wrap text-sm text-gray-800 bg-gray-50 p-4 rounded-lg font-mono" x-text="sourceContent"></pre>
+                </div>
+
+                <!-- URL Content -->
+                <div x-show="sourceContentType === 'url'" class="space-y-3">
+                    <p class="text-sm text-gray-600">Original URL:</p>
+                    <a :href="sourceContent" target="_blank" rel="noopener noreferrer"
+                       class="text-indigo-600 hover:text-indigo-800 underline break-all" x-text="sourceContent"></a>
+                    <button @click="window.open(sourceContent, '_blank')" type="button"
+                            class="mt-4 inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">
+                        Open in New Tab
+                        <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Error State -->
+                <div x-show="sourceContentType === 'error'" class="text-red-600 text-sm" x-text="sourceContent"></div>
+            </div>
+        </div>
     </div>
-</div>
+    </div> <!-- End modal -->
+    </div> <!-- End max-w-7xl container -->
+</div> <!-- End x-data scope -->
 
 <script>
 function jobDetail(jobId, initialStatus) {
@@ -287,8 +351,13 @@ function jobDetail(jobId, initialStatus) {
         draftEdited: false,
         sending: false,
         pollInterval: null,
+        showSourceModal: false,
+        sourceContent: null,
+        sourceContentType: null,
 
         init() {
+            console.log('Alpine.js jobDetail initialized for job:', this.jobId);
+            console.log('Initial state - showSourceModal:', this.showSourceModal);
             this.fetchJobStatus();
             // Poll for updates if job is processing
             if (this.isProcessing()) {
@@ -389,6 +458,59 @@ function jobDetail(jobId, initialStatus) {
                 alert('Error sending email');
             } finally {
                 this.sending = false;
+            }
+        },
+
+        async viewSource() {
+            console.log('viewSource called, jobId:', this.jobId);
+            try {
+                const url = `/api/jobs/${this.jobId}/source`;
+                console.log('Fetching source from:', url);
+                const response = await fetch(url);
+                console.log('Response status:', response.status, response.statusText);
+
+                if (!response.ok) {
+                    throw new Error('Failed to load source');
+                }
+
+                // Check if it's an image (served directly)
+                const contentType = response.headers.get('content-type');
+                console.log('Content-Type:', contentType);
+
+                if (contentType && contentType.startsWith('image/')) {
+                    // Create blob URL for image
+                    const blob = await response.blob();
+                    this.sourceContent = URL.createObjectURL(blob);
+                    this.sourceContentType = 'image';
+                    console.log('Set sourceContentType to image');
+                } else {
+                    // Parse JSON for text or URL
+                    const data = await response.json();
+                    console.log('JSON response:', data);
+
+                    if (data.type === 'text') {
+                        this.sourceContent = data.content;
+                        this.sourceContentType = 'text';
+                        console.log('Set sourceContentType to text');
+                    } else if (data.type === 'url') {
+                        this.sourceContent = data.url;
+                        this.sourceContentType = 'url';
+                        console.log('Set sourceContentType to url');
+                    } else if (data.error) {
+                        this.sourceContent = data.error;
+                        this.sourceContentType = 'error';
+                        console.log('Set sourceContentType to error');
+                    }
+                }
+
+                console.log('Setting showSourceModal to true');
+                this.showSourceModal = true;
+                console.log('showSourceModal is now:', this.showSourceModal);
+            } catch (error) {
+                console.error('Error loading source:', error);
+                this.sourceContent = 'Failed to load source content';
+                this.sourceContentType = 'error';
+                this.showSourceModal = true;
             }
         }
     };

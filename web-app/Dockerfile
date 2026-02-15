@@ -48,4 +48,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 
 # Default command (can be overridden in docker-compose)
 # Only run migrations if migrations folder exists, otherwise just start the app
-CMD ["sh", "-c", "if [ -f migrations/env.py ]; then flask db upgrade; fi && gunicorn -w 4 -b 0.0.0.0:5000 --timeout 120 wsgi:app"]
+CMD ["sh", "-c", "if [ -f migrations/env.py ]; then flask db upgrade; fi && gunicorn -w 4 -b 0.0.0.0:5000 --timeout 120 --access-logfile - --error-logfile - --log-level info wsgi:app"]

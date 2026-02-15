@@ -47,7 +47,7 @@ class Config:
     USER_NAME = os.getenv('USER_NAME')
 
     # Upload settings
-    UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', 'uploads')
+    UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', '/app/uploads')
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'txt'}
 
