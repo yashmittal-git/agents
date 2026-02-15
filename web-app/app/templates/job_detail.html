@@ -79,7 +79,7 @@
 
         <!-- Status Banner -->
         <div class="mb-6">
-            <div x-show="jobData.status === 'pending' || jobData.status === 'extracting' || jobData.status === 'researching' || jobData.status === 'generating'"
+            <div x-show="jobData.status === 'pending' || jobData.status === 'extracting' || jobData.status === 'researching' || jobData.status === 'generating' || jobData.status === 'processing'"
                  class="rounded-md bg-yellow-50 p-4">
                 <div class="flex">
                     <div class="flex-shrink-0">
@@ -94,6 +94,28 @@
                         </h3>
                         <div class="mt-2 text-sm text-yellow-700">
                             <p>Status: <span class="font-semibold capitalize" x-text="jobData.status"></span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="jobData.status === 'irrelevant'" class="rounded-md bg-orange-50 p-4 border-2 border-orange-200">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-6 w-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-orange-800">Content Not Job-Related</h3>
+                        <div class="mt-2 text-sm text-orange-700">
+                            <p>This content does not appear to be a job posting or career opportunity. Please upload a job posting, job description, or career-related content.</p>
+                            <p class="mt-2 font-medium">Examples of valid content:</p>
+                            <ul class="list-disc list-inside mt-1 space-y-1">
+                                <li>Screenshots of job postings from LinkedIn, email, or WhatsApp</li>
+                                <li>Text files containing job descriptions</li>
+                                <li>URLs to job listing pages</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -114,15 +136,50 @@
         <!-- Job Information -->
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-3 mb-6">
             <div class="lg:col-span-2">
-                <!-- Draft Content -->
+                <!-- Draft Content - Channel-Aware -->
                 <div x-show="jobData.status === 'drafted'" class="bg-white shadow sm:rounded-lg">
                     <div class="px-4 py-5 sm:p-6">
+                        <!-- Channel Recommendation Banner -->
+                        {% if draft %}
+                        <div class="mb-6 rounded-md p-4" :class="{
+                            'bg-green-50 border-2 border-green-200': jobData.drafts && jobData.drafts[0] && jobData.drafts[0].channel === 'email',
+                            'bg-blue-50 border-2 border-blue-200': jobData.drafts && jobData.drafts[0] && jobData.drafts[0].channel !== 'email'
+                        }">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-6 w-6" :class="{
+                                        'text-green-400': jobData.drafts && jobData.drafts[0] && jobData.drafts[0].channel === 'email',
+                                        'text-blue-400': jobData.drafts && jobData.drafts[0] && jobData.drafts[0].channel !== 'email'
+                                    }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                                <div class="ml-3 flex-1">
+                                    <h4 class="text-sm font-medium" :class="{
+                                        'text-green-800': jobData.drafts && jobData.drafts[0] && jobData.drafts[0].channel === 'email',
+                                        'text-blue-800': jobData.drafts && jobData.drafts[0] && jobData.drafts[0].channel !== 'email'
+                                    }">
+                                        <span class="capitalize" x-text="jobData.drafts && jobData.drafts[0] && jobData.drafts[0].channel"></span> Recommended
+                                        <span class="ml-2 text-xs font-normal" x-text="jobData.drafts && jobData.drafts[0] && `(${Math.round(jobData.drafts[0].confidence * 100)}% confidence)`"></span>
+                                    </h4>
+                                    <p class="mt-1 text-sm" :class="{
+                                        'text-green-700': jobData.drafts && jobData.drafts[0] && jobData.drafts[0].channel === 'email',
+                                        'text-blue-700': jobData.drafts && jobData.drafts[0] && jobData.drafts[0].channel !== 'email'
+                                    }" x-text="jobData.drafts && jobData.drafts[0] && jobData.drafts[0].reason"></p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-lg font-medium leading-6 text-gray-900">
-                                Draft Email
+                                <span x-show="jobData.drafts && jobData.drafts[0] && jobData.drafts[0].channel === 'email'">📧 Email Draft</span>
+                                <span x-show="jobData.drafts && jobData.drafts[0] && jobData.drafts[0].channel === 'linkedin'">💼 LinkedIn Message</span>
+                                <span x-show="jobData.drafts && jobData.drafts[0] && jobData.drafts[0].channel === 'whatsapp'">💬 WhatsApp Message</span>
                             </h3>
                             {% if draft %}
-                            <div class="flex items-center space-x-3">
+                            <!-- Email Channel Actions -->
+                            <div x-show="jobData.drafts && jobData.drafts[0] && jobData.drafts[0].channel === 'email'" class="flex items-center space-x-3">
                                 <span x-show="draftEdited" class="text-sm text-gray-500 italic">Draft has been edited</span>
                                 <button @click="saveDraft"
                                         class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
@@ -138,8 +195,8 @@
                         </div>
 
                         {% if draft %}
-                        <!-- Vertical Stack: Editor on Top, Preview on Bottom -->
-                        <div class="space-y-6">
+                        <!-- EMAIL CHANNEL: Editor and Preview -->
+                        <div x-show="jobData.drafts && jobData.drafts[0] && jobData.drafts[0].channel === 'email'" class="space-y-6">
                             <!-- Editor Section -->
                             <div class="space-y-4">
                                 <div>
@@ -180,6 +237,89 @@
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- LINKEDIN CHANNEL: Manual Instructions -->
+                        <div x-show="jobData.drafts && jobData.drafts[0] && jobData.drafts[0].channel === 'linkedin'" class="space-y-6">
+                            <!-- Instructions -->
+                            <div class="bg-blue-50 border-l-4 border-blue-400 p-4">
+                                <div class="flex">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3">
+                                        <h3 class="text-sm font-medium text-blue-800">Manual Action Required</h3>
+                                        <div class="mt-2 text-sm text-blue-700">
+                                            <p class="font-medium">Follow these steps to send via LinkedIn:</p>
+                                            <ol class="list-decimal list-inside mt-2 space-y-1">
+                                                <li>Copy the message below</li>
+                                                <li x-show="jobData.recruiter_linkedin">Visit the recruiter's profile: <a :href="jobData.recruiter_linkedin" target="_blank" class="underline font-semibold" x-text="jobData.recruiter_linkedin"></a></li>
+                                                <li>Click "Message" or "Connect" with a note</li>
+                                                <li>Paste the message and personalize if needed</li>
+                                                <li>Send your message</li>
+                                            </ol>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Message Content -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">LinkedIn Message</label>
+                                <div class="border-2 border-gray-200 rounded-lg p-6 bg-gray-50">
+                                    <div class="bg-white rounded-lg p-4 whitespace-pre-wrap text-sm text-gray-800" x-text="draftBody"></div>
+                                </div>
+                                <button @click="navigator.clipboard.writeText(draftBody); alert('Message copied to clipboard!')"
+                                        class="mt-3 inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
+                                    <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                    </svg>
+                                    Copy Message
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- WHATSAPP CHANNEL: Manual Instructions -->
+                        <div x-show="jobData.drafts && jobData.drafts[0] && jobData.drafts[0].channel === 'whatsapp'" class="space-y-6">
+                            <!-- Instructions -->
+                            <div class="bg-green-50 border-l-4 border-green-400 p-4">
+                                <div class="flex">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3">
+                                        <h3 class="text-sm font-medium text-green-800">Manual Action Required</h3>
+                                        <div class="mt-2 text-sm text-green-700">
+                                            <p class="font-medium">Follow these steps to send via WhatsApp:</p>
+                                            <ol class="list-decimal list-inside mt-2 space-y-1">
+                                                <li>Copy the message below</li>
+                                                <li>Open WhatsApp and find the recruiter's contact</li>
+                                                <li>Paste the message and personalize if needed</li>
+                                                <li>Send your message</li>
+                                            </ol>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Message Content -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">WhatsApp Message</label>
+                                <div class="border-2 border-gray-200 rounded-lg p-6 bg-gray-50">
+                                    <div class="bg-white rounded-lg p-4 whitespace-pre-wrap text-sm text-gray-800" x-text="draftBody"></div>
+                                </div>
+                                <button @click="navigator.clipboard.writeText(draftBody); alert('Message copied to clipboard!')"
+                                        class="mt-3 inline-flex items-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500">
+                                    <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                    </svg>
+                                    Copy Message
+                                </button>
                             </div>
                         </div>
                         {% else %}
@@ -342,12 +482,14 @@
 
 <script>
 function jobDetail(jobId, initialStatus) {
+    console.log('jobDetail() called with:', jobId, initialStatus);
+    try {
     return {
         jobId: jobId,
         jobData: { status: initialStatus },
         draftId: {{ draft.id if draft else 'null' }},
-        draftSubject: '{{ draft.subject if draft else '' }}',
-        draftBody: {{ draft.body_text | tojson if draft else '""' }},
+        draftSubject: {{ (draft.subject if draft else '') | tojson }},
+        draftBody: {{ (draft.body_text if draft else '') | tojson }},
         draftEdited: false,
         sending: false,
         pollInterval: null,
@@ -357,6 +499,7 @@ function jobDetail(jobId, initialStatus) {
 
         init() {
             console.log('Alpine.js jobDetail initialized for job:', this.jobId);
+            console.log('Initial jobData.status:', this.jobData.status);
             console.log('Initial state - showSourceModal:', this.showSourceModal);
             this.fetchJobStatus();
             // Poll for updates if job is processing
@@ -390,6 +533,8 @@ function jobDetail(jobId, initialStatus) {
             try {
                 const response = await fetch(`/api/jobs/${this.jobId}/status`);
                 const data = await response.json();
+                console.log('Fetched job data:', data);
+                console.log('Status from API:', data.status);
                 this.jobData = data;
 
                 // Update draft if available
@@ -514,6 +659,24 @@ function jobDetail(jobId, initialStatus) {
             }
         }
     };
+    } catch (error) {
+        console.error('Error creating jobDetail component:', error);
+        // Return minimal object to prevent Alpine errors
+        return {
+            jobId: jobId,
+            jobData: { status: initialStatus },
+            draftId: null,
+            draftSubject: '',
+            draftBody: '',
+            draftEdited: false,
+            sending: false,
+            pollInterval: null,
+            showSourceModal: false,
+            sourceContent: null,
+            sourceContentType: null,
+            init() { console.log('Fallback init'); }
+        };
+    }
 }
 </script>
 {% endblock %}

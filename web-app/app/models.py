@@ -33,9 +33,10 @@ class Job(db.Model):
         nullable=False,
         default='pending',
         index=True
-    )  # 'pending', 'extracting', 'extracted', 'researching', 'researched', 'generating', 'drafted', 'sent', 'failed'
+    )  # 'pending', 'extracting', 'extracted', 'researching', 'researched', 'generating', 'drafted', 'sent', 'failed', 'irrelevant'
     task_id = db.Column(db.String(255))  # Celery task ID for status tracking
     error_message = db.Column(db.Text)
+    is_relevant = db.Column(db.Boolean, default=True)  # Whether content is job-related
 
     # Relationships
     drafts = db.relationship('Draft', backref='job', lazy=True, cascade='all, delete-orphan')
@@ -60,6 +61,7 @@ class Job(db.Model):
             'source_platform': self.source_platform,
             'user_context': self.user_context,
             'status': self.status,
+            'is_relevant': self.is_relevant,
             'error_message': self.error_message,
             'drafts': [draft.to_dict() for draft in self.drafts] if self.drafts else []
         }
