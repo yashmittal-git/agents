@@ -233,3 +233,51 @@ from job_outreach_agent import JobOrchestrator
 - Environment config: `.env` (root directory)
 - Draft outputs: `job-outreach-agent/outreach_drafts/`
 - Example usage: `job-outreach-agent/example_usage.py`
+
+## Documentation Maintenance
+
+### When to Update Documentation
+
+Each agent has its own `CLAUDE.md` and `README.md`:
+- **CLAUDE.md**: For future Claude instances (architecture, development workflows, critical context)
+- **README.md**: For human users (API reference, usage examples, setup instructions)
+
+**When making changes, always consider:**
+1. Does this affect user-facing behavior? → Update relevant README.md files
+2. Does this change architecture/workflows? → Update relevant CLAUDE.md files
+3. Does this impact multiple agents? → Update both root and agent-specific docs
+
+**Which files to update:**
+- Root-level changes → Update `/CLAUDE.md` and/or `/README.md`
+- Agent-specific changes → Update `{agent}/CLAUDE.md` and/or `{agent}/README.md`
+- Cross-cutting features → Update root + affected agents
+
+### Documentation Quality Standards
+
+**CRITICAL: Never bloat documentation files**
+- Keep content concise and focused
+- Remove outdated or redundant information when updating
+- Avoid repeating what's obvious from code or file structure
+- Don't document every minor detail - focus on what future Claude/users need to know
+- Examples: Good if they clarify complex concepts; bloat if they repeat obvious patterns
+
+**When editing docs:**
+1. Add only relevant, non-obvious information
+2. Remove any outdated sections you encounter
+3. Consolidate redundant information
+4. Ask: "Does a future Claude/user actually need this to be effective?"
+5. If unsure whether to document something, err on the side of less documentation
+
+**Documentation anti-patterns to avoid:**
+- ❌ Listing every file in the project (use tree structure sparingly)
+- ❌ Documenting standard Python patterns everyone knows
+- ❌ Repeating what's in code docstrings
+- ❌ Adding "just in case" sections that aren't actually needed
+- ❌ Creating documentation that duplicates README.md in CLAUDE.md or vice versa
+
+**Good documentation:**
+- ✅ Architecture decisions and patterns
+- ✅ Non-obvious workflows and dependencies
+- ✅ Critical context that impacts multiple files
+- ✅ Common pitfalls and their solutions
+- ✅ Integration points between services
