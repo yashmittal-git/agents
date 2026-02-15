@@ -1,0 +1,9 @@
+# External Agent Services
+-e ../email-agent
+-e ../research-agent
+-e ../content-agent
+-e ../linkedin-agent
+-e ../extraction-agent
+
+# Direct dependencies
+python-dotenv>=1.0.0

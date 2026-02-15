@@ -1,0 +1,56 @@
+YASH MITTAL
+Phone: +91-9756251002
+Email: mittal.yash2000@gmail.com
+Website: yashmittal.co.in
+LinkedIn: linkedin.com/in/yashmittal-in
+GitHub: github.com/yashmittal-git
+
+SUMMARY
+Tech Lead with 5 years of experience building production-grade backend and AI-driven systems. Currently leading Voicebot and integration platforms at Convin, working across LLMs, STT/TTS pipelines, distributed systems, and cloud infrastructure. Strong ownership mindset with deep exposure to system design, scalability, cost optimization, and customer-facing engineering.
+
+SKILLS
+Languages: Python (Django, Flask, FastAPI), Go, C++
+Conversational AI: LLM-based systems, Speech-To-Text, Text-To-Speech, Agentic Workflows
+AI Techniques: RAG, MCP, Prompt Engineering, Real-time AI Pipelines
+Backend & Messaging: Async Programming, REST APIs, Webhooks, RabbitMQ, Kafka
+Databases & Search: PostgreSQL, MongoDB, DynamoDB, Redis, ElasticSearch
+Cloud & Infra: AWS, Oracle Cloud (OCI), GCP, Azure, Docker, Kubernetes, Linux, On-Prem
+Observability: Grafana, Prometheus, Loki, Jaeger, Splunk
+
+EXPERIENCE
+
+Convin.AI — Bengaluru (Dec 2023 – Present)
+
+Tech Lead – Voicebot (Dec 2024 – Present)
+• Architected and launched a real-time AI Voicebot platform
+• Achieved sub-second round-trip latency across conversational flows in production
+• Scaled the platform to 300K+ automated calls/day across multi-tenant enterprise deployments
+• Implemented strong observability, metrics, and failure attribution, reducing debugging and RCA effort by 70%+
+• Led cost-efficiency initiatives, delivering 45% reduction in TTS/LLM costs without degrading call quality
+• Built internal systems for faster tenant onboarding, reducing manual setup time by 80%
+• Implemented RAG-based live knowledge base access for contextual, real-time responses during calls
+• Delivered secure cloud and on-prem deployments for high-security enterprise customers
+• Mentored engineers and drove technical execution, priorities, and cross-team alignment
+
+Tech Lead – Client Onboarding & Integrations (Dec 2023 – Dec 2024)
+• Led a team of 4 engineers owning client onboarding and integration platforms, including microservices for call ingestion, metadata retrieval, and schema normalization - ETL Pipeline
+• Drove migration from AWS (Lambda, S3) to Oracle Cloud Infrastructure K8, achieving 50% cost savings
+• Enabled DIY integrations via APIs, webhooks, SFTP, batch pipelines, VPN-auth, and on-prem setups
+• Improved system robustness using monitoring, alerts, recovery workflows, and scalable storage abstractions
+• Owned pre-sales technical discussions, designing integration architectures tailored to diverse client ecosystems
+
+Amadeus Labs — Bengaluru (Jan 2021 – Dec 2023)
+
+Software Development Engineer – I (Aug 2021 – Dec 2023)
+• Built a functional monitoring framework adopted by 25+ services, logging high-volume events to Splunk
+• Technical owner of a framework detecting and resolving seat discrepancies across distributed systems
+• Resolved critical production outages impacting 30+ enterprise customers via NoSQL DB optimization
+• Automated feature rollout and configuration for 80+ customers, reducing manual effort by 68%
+
+Software Development Engineer – Intern (Jan 2021 – May 2021)
+• Built an end-to-end testing framework enabling experts to define dimensions and generate large test datasets
+• Developed FastAPI-based backend with Angular UI and MySQL storage
+
+EDUCATION
+B.E. in Electronics & Computer, Thapar Institute of Engineering & Technology, Patiala (2017-2021)
+CGPA: 9.20

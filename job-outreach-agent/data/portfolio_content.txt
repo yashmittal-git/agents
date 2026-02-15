@@ -1,0 +1,56 @@
+YASH MITTAL - Portfolio Highlights
+
+CURRENT ROLE
+Tech Lead - Voicebot at Convin.AI (Dec 2024 - Present)
+Leading development of conversational AI systems with focus on low-latency voice bot technology.
+
+KEY ACHIEVEMENTS
+• Quarterly award (Convin Q2'25) for developing Voicebot handling "live calling with sub second latency"
+• "Pacesetter" award at Amadeus for exceptional performance and innovation
+• Microsoft Certified: Azure Fundamentals
+• Google Crash Course on Python certification
+
+CORE EXPERTISE
+• Conversational AI and Real-time AI Pipelines
+• System Design and Distributed Systems
+• Cloud Computing (AWS, Azure, OCI, GCP)
+• Backend Development (Python, Golang)
+• LLM-based Systems and RAG Implementation
+• Speech-To-Text and Text-To-Speech Pipelines
+• Cost Optimization and Scalability
+• Team Leadership and Mentorship
+
+MAJOR PROJECTS
+
+1. AI VOICEBOT PLATFORM (Current - Convin.AI)
+   - Real-time conversational AI with sub-second latency
+   - 300K+ automated calls/day at scale
+   - RAG-based knowledge base integration
+   - Enterprise-grade observability and monitoring
+   - 45% cost reduction in TTS/LLM operations
+   - Multi-tenant architecture with cloud and on-prem deployments
+
+2. CLIENT INTEGRATION PLATFORM (Convin.AI)
+   - ETL pipelines for call ingestion and metadata normalization
+   - DIY integration capabilities via APIs, webhooks, SFTP
+   - Migration from AWS to OCI K8 (50% cost savings)
+   - Pre-sales technical architecture design
+
+3. MONITORING & AUTOMATION SYSTEMS (Amadeus Labs)
+   - Functional monitoring framework for 25+ services
+   - Automated configuration rollout for 80+ customers
+   - Critical production issue resolution for 30+ enterprises
+
+TECHNICAL STACK
+Languages: Python (Django, Flask, FastAPI), Golang, C++
+AI/ML: OpenAI, Gemini, ElevenLabs, STT/TTS systems
+Cloud: AWS, Azure, OCI, GCP
+Infrastructure: Docker, Kubernetes, Linux
+Databases: PostgreSQL, MongoDB, DynamoDB, Redis, ElasticSearch
+Messaging: RabbitMQ, Kafka, SQS
+Observability: Grafana, Prometheus, Loki, Jaeger, Splunk
+
+EDUCATION
+B.E. in Electronics & Computer Engineering
+Thapar Institute of Engineering & Technology
+CGPA: 9.20 (2017-2021)
