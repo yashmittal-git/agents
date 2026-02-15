@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Jobs - Job Outreach{% endblock %}
+
+{% block content %}
+<div class="py-10">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="md:flex md:items-center md:justify-between mb-8">
+            <div class="min-w-0 flex-1">
+                <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+                    Job Applications
+                </h2>
+            </div>
+            <div class="mt-4 flex md:ml-4 md:mt-0">
+                <a href="{{ url_for('main.index') }}"
+                   class="ml-3 inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">
+                    Upload New Job
+                </a>
+            </div>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="mb-6">
+            <div class="sm:hidden">
+                <label for="tabs" class="sr-only">Select a status</label>
+                <select id="tabs" name="tabs"
+                        class="block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                        onchange="window.location.href='{{ url_for('jobs.job_list') }}?status=' + this.value">
+                    <option value="" {% if not status_filter %}selected{% endif %}>All ({{ status_counts.all }})</option>
+                    <option value="drafted" {% if status_filter == 'drafted' %}selected{% endif %}>Drafted ({{ status_counts.drafted }})</option>
+                    <option value="sent" {% if status_filter == 'sent' %}selected{% endif %}>Sent ({{ status_counts.sent }})</option>
+                    <option value="failed" {% if status_filter == 'failed' %}selected{% endif %}>Failed ({{ status_counts.failed }})</option>
+                </select>
+            </div>
+            <div class="hidden sm:block">
+                <nav class="flex space-x-4" aria-label="Tabs">
+                    <a href="{{ url_for('jobs.job_list') }}"
+                       class="{% if not status_filter %}bg-indigo-100 text-indigo-700{% else %}text-gray-500 hover:text-gray-700{% endif %} rounded-md px-3 py-2 text-sm font-medium">
+                        All <span class="ml-2 rounded-full bg-gray-200 px-2.5 py-0.5 text-xs">{{ status_counts.all }}</span>
+                    </a>
+                    <a href="{{ url_for('jobs.job_list', status='drafted') }}"
+                       class="{% if status_filter == 'drafted' %}bg-indigo-100 text-indigo-700{% else %}text-gray-500 hover:text-gray-700{% endif %} rounded-md px-3 py-2 text-sm font-medium">
+                        Drafted <span class="ml-2 rounded-full bg-gray-200 px-2.5 py-0.5 text-xs">{{ status_counts.drafted }}</span>
+                    </a>
+                    <a href="{{ url_for('jobs.job_list', status='sent') }}"
+                       class="{% if status_filter == 'sent' %}bg-indigo-100 text-indigo-700{% else %}text-gray-500 hover:text-gray-700{% endif %} rounded-md px-3 py-2 text-sm font-medium">
+                        Sent <span class="ml-2 rounded-full bg-gray-200 px-2.5 py-0.5 text-xs">{{ status_counts.sent }}</span>
+                    </a>
+                    <a href="{{ url_for('jobs.job_list', status='failed') }}"
+                       class="{% if status_filter == 'failed' %}bg-red-100 text-red-700{% else %}text-gray-500 hover:text-gray-700{% endif %} rounded-md px-3 py-2 text-sm font-medium">
+                        Failed <span class="ml-2 rounded-full bg-gray-200 px-2.5 py-0.5 text-xs">{{ status_counts.failed }}</span>
+                    </a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Jobs List -->
+        <div class="bg-white shadow sm:rounded-md">
+            <ul role="list" class="divide-y divide-gray-200">
+                {% for job in jobs %}
+                <li>
+                    <a href="{{ url_for('jobs.job_detail', job_id=job.id) }}" class="block hover:bg-gray-50">
+                        <div class="px-4 py-4 sm:px-6">
+                            <div class="flex items-center justify-between">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-indigo-600 truncate">
+                                        {{ job.company_name or 'Processing...' }} - {{ job.role or 'Unknown Role' }}
+                                    </p>
+                                    <p class="mt-2 flex items-center text-sm text-gray-500">
+                                        <span class="truncate">{{ job.recruiter_name or 'Recruiter not specified' }}</span>
+                                    </p>
+                                </div>
+                                <div class="ml-5 flex-shrink-0">
+                                    {% if job.status == 'pending' or job.status == 'extracting' or job.status == 'researching' or job.status == 'generating' %}
+                                        <span class="inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-800 ring-1 ring-inset ring-yellow-600/20">
+                                            Processing
+                                        </span>
+                                    {% elif job.status == 'drafted' %}
+                                        <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
+                                            Ready to Send
+                                        </span>
+                                    {% elif job.status == 'sent' %}
+                                        <span class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+                                            Sent
+                                        </span>
+                                    {% elif job.status == 'failed' %}
+                                        <span class="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/10">
+                                            Failed
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="mt-2 sm:flex sm:justify-between">
+                                <div class="sm:flex">
+                                    <p class="flex items-center text-sm text-gray-500">
+                                        {{ job.source_type | capitalize }}
+                                    </p>
+                                </div>
+                                <div class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                                    <p>
+                                        {{ job.created_at | datetime('%b %d, %Y %H:%M') }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+                {% else %}
+                <li class="px-4 py-8 text-center">
+                    <p class="text-sm text-gray-500">No jobs found. <a href="{{ url_for('main.index') }}" class="text-indigo-600 hover:text-indigo-500">Upload your first job posting</a></p>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

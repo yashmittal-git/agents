@@ -12,7 +12,9 @@ agents/
 ├── content-agent/            # AI content generation
 ├── linkedin-agent/           # LinkedIn messaging (placeholder)
 ├── job-outreach-agent/       # Intelligent orchestrator (uses all 5)
+├── web-app/                  # 🆕 Web UI with async processing (Docker)
 ├── venv/                     # Shared virtual environment
+├── docker-compose.yml        # 🆕 Full-stack Docker orchestration
 ├── .env                      # Environment variables (gitignored)
 ├── .env.example              # Template for .env
 ├── credentials.json          # Gmail OAuth credentials (gitignored)
@@ -21,6 +23,38 @@ agents/
 ```
 
 ## Quick Start
+
+### Option 1: Web Application (Recommended) 🆕
+
+**Full-featured web UI with async processing, database persistence, and real-time status updates.**
+
+```bash
+# 1. Install Docker Desktop (if not installed)
+# Download from: https://www.docker.com/products/docker-desktop/
+
+# 2. Configure environment
+cp .env.docker .env
+# Edit .env with your OPENAI_API_KEY, USER_EMAIL, USER_NAME
+
+# 3. Start all services (Flask, Celery, PostgreSQL, Redis, RabbitMQ)
+docker-compose up -d
+
+# 4. Access the web UI
+open http://localhost:5000
+```
+
+**Features**:
+- Upload job postings (images, PDFs, text, URLs)
+- Async processing with real-time status updates
+- Draft editor with one-click email sending
+- Job history and search
+- Company research caching
+
+See [START_WEB_APP.md](START_WEB_APP.md) for detailed instructions.
+
+### Option 2: CLI (Traditional)
+
+**Python CLI for job outreach via terminal.**
 
 ### 1. Activate Virtual Environment
 
@@ -75,6 +109,41 @@ python -m linkedin_agent.linkedin_service
 cd job-outreach-agent
 python example_usage.py
 ```
+
+## Web Application 🆕
+
+The **web-app** provides a full-featured web interface for the job outreach system:
+
+### Architecture
+- **Flask** - Web framework
+- **Celery + RabbitMQ** - Async task processing
+- **PostgreSQL** - Job/draft persistence & company research cache
+- **Redis** - Sessions and caching
+- **Docker Compose** - One-command deployment
+
+### Key Features
+1. **Upload Interface**: Support for images, PDFs, text, URLs
+2. **Async Processing**: Background workers handle extraction, research, content generation
+3. **Real-time Status**: Live updates as job is processed
+4. **Draft Editor**: Edit generated content before sending
+5. **One-click Sending**: Send emails directly from the UI
+6. **Job History**: Track all applications with status filters
+7. **Company Cache**: Research data cached for 7 days
+
+### Quick Start
+```bash
+# Configure and start
+cp .env.docker .env
+# Edit .env with your credentials
+docker-compose up -d
+
+# Access
+open http://localhost:5000
+```
+
+See **[web-app/README.md](web-app/README.md)** for full documentation.
+
+---
 
 ## Agent Services
 

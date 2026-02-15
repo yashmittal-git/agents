@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Job Posting - Job Outreach{% endblock %}
+
+{% block content %}
+<div class="py-10">
+    <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+        <div class="md:flex md:items-center md:justify-between mb-8">
+            <div class="min-w-0 flex-1">
+                <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+                    Upload Job Posting
+                </h2>
+                <p class="mt-2 text-sm text-gray-500">
+                    Upload a screenshot, paste text, or provide a URL to get started
+                </p>
+            </div>
+        </div>
+
+        <div class="bg-white shadow sm:rounded-lg" x-data="uploadForm()">
+            <form action="{{ url_for('main.upload') }}" method="POST" enctype="multipart/form-data" class="p-6 space-y-6">
+                <!-- Source Type Selection -->
+                <div>
+                    <label class="text-base font-semibold text-gray-900">Source Type</label>
+                    <fieldset class="mt-4">
+                        <div class="space-y-4 sm:flex sm:items-center sm:space-x-10 sm:space-y-0">
+                            <div class="flex items-center">
+                                <input id="type-image" name="source_type" type="radio" value="image"
+                                       x-model="sourceType" checked
+                                       class="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600">
+                                <label for="type-image" class="ml-3 block text-sm font-medium leading-6 text-gray-900">
+                                    Image/PDF
+                                </label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="type-text" name="source_type" type="radio" value="text"
+                                       x-model="sourceType"
+                                       class="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600">
+                                <label for="type-text" class="ml-3 block text-sm font-medium leading-6 text-gray-900">
+                                    Text
+                                </label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="type-url" name="source_type" type="radio" value="url"
+                                       x-model="sourceType"
+                                       class="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600">
+                                <label for="type-url" class="ml-3 block text-sm font-medium leading-6 text-gray-900">
+                                    URL
+                                </label>
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+
+                <!-- File Upload -->
+                <div x-show="sourceType === 'image'" x-cloak>
+                    <label for="file" class="block text-sm font-medium leading-6 text-gray-900">
+                        Upload File
+                    </label>
+
+                    <!-- File Upload Area (shown when no file selected) -->
+                    <div x-show="!selectedFile"
+                         class="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10 hover:border-indigo-400 transition-colors">
+                        <div class="text-center">
+                            <svg class="mx-auto h-12 w-12 text-gray-300" viewBox="0 0 24 24" fill="currentColor">
+                                <path fill-rule="evenodd" d="M1.5 6a2.25 2.25 0 012.25-2.25h16.5A2.25 2.25 0 0122.5 6v12a2.25 2.25 0 01-2.25 2.25H3.75A2.25 2.25 0 011.5 18V6zM3 16.06V18c0 .414.336.75.75.75h16.5A.75.75 0 0021 18v-1.94l-2.69-2.689a1.5 1.5 0 00-2.12 0l-.88.879.97.97a.75.75 0 11-1.06 1.06l-5.16-5.159a1.5 1.5 0 00-2.12 0L3 16.061zm10.125-7.81a1.125 1.125 0 112.25 0 1.125 1.125 0 01-2.25 0z" clip-rule="evenodd" />
+                            </svg>
+                            <div class="mt-4 flex text-sm leading-6 text-gray-600">
+                                <label for="file" class="relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500">
+                                    <span>Upload a file</span>
+                                    <input id="file" name="file" type="file" class="sr-only"
+                                           @change="handleFileSelect"
+                                           accept=".png,.jpg,.jpeg,.gif,.pdf,.txt">
+                                </label>
+                                <p class="pl-1">or drag and drop</p>
+                            </div>
+                            <p class="text-xs leading-5 text-gray-600">PNG, JPG, GIF, PDF, TXT up to 16MB</p>
+                        </div>
+                    </div>
+
+                    <!-- File Preview (shown when file selected) -->
+                    <div x-show="selectedFile"
+                         class="mt-2 rounded-lg border-2 border-green-500 bg-green-50 p-6">
+                        <div class="flex items-start space-x-4">
+                            <!-- Image Preview or File Icon -->
+                            <div class="flex-shrink-0">
+                                <!-- Image Preview -->
+                                <div x-show="isImage">
+                                    <img :src="filePreview" alt="Preview" class="h-32 w-32 object-cover rounded-lg border-2 border-gray-200">
+                                </div>
+                                <!-- PDF/Other File Icon -->
+                                <div x-show="!isImage" class="h-32 w-32 flex items-center justify-center bg-white rounded-lg border-2 border-gray-200">
+                                    <svg class="h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <!-- File Info -->
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-start justify-between">
+                                    <div>
+                                        <div class="flex items-center space-x-2">
+                                            <svg class="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                            </svg>
+                                            <p class="text-sm font-semibold text-green-800">File uploaded successfully!</p>
+                                        </div>
+                                        <p class="mt-2 text-sm font-medium text-gray-900 truncate" x-text="selectedFile?.name"></p>
+                                        <p class="mt-1 text-xs text-gray-500" x-text="fileSize"></p>
+                                        <p class="mt-1 text-xs text-gray-500" x-text="fileType"></p>
+                                    </div>
+                                    <!-- Remove Button -->
+                                    <button type="button" @click="removeFile"
+                                            class="ml-4 inline-flex items-center rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                                        <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                        Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Text Input -->
+                <div x-show="sourceType === 'text'" x-cloak>
+                    <label for="text_content" class="block text-sm font-medium leading-6 text-gray-900">
+                        Job Posting Text
+                    </label>
+                    <div class="mt-2">
+                        <textarea id="text_content" name="text_content" rows="10"
+                                  class="block w-full rounded-md border border-gray-300 py-1.5 px-3 text-gray-900 shadow-sm placeholder:text-gray-400 sm:text-sm sm:leading-6"
+                                  placeholder="Paste the job posting text here..."></textarea>
+                    </div>
+                </div>
+
+                <!-- URL Input -->
+                <div x-show="sourceType === 'url'" x-cloak>
+                    <label for="url" class="block text-sm font-medium leading-6 text-gray-900">
+                        Job Posting URL
+                    </label>
+                    <div class="mt-2">
+                        <input type="url" name="url" id="url"
+                               class="block w-full rounded-md border border-gray-300 py-1.5 px-3 text-gray-900 shadow-sm placeholder:text-gray-400 sm:text-sm sm:leading-6"
+                               placeholder="https://...">
+                    </div>
+                </div>
+
+                <!-- User Context (Optional) -->
+                <div>
+                    <label for="user_context" class="block text-sm font-medium leading-6 text-gray-900">
+                        Additional Notes (Optional)
+                    </label>
+                    <div class="mt-2">
+                        <textarea id="user_context" name="user_context" rows="4"
+                                  class="block w-full rounded-md border border-gray-300 py-1.5 px-3 text-gray-900 shadow-sm placeholder:text-gray-400 sm:text-sm sm:leading-6"
+                                  placeholder="What interests you about this role? Any specific points to emphasize?"></textarea>
+                    </div>
+                    <p class="mt-2 text-sm text-gray-500">
+                        Add any context or specific points you want to highlight in your outreach
+                    </p>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex justify-end">
+                    <button type="submit"
+                            class="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                        Process Job Posting
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function uploadForm() {
+    return {
+        sourceType: 'image',
+        selectedFile: null,
+        filePreview: null,
+        isImage: false,
+        fileSize: '',
+        fileType: '',
+
+        handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            this.selectedFile = file;
+
+            // Calculate file size
+            const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+            const sizeInKB = (file.size / 1024).toFixed(2);
+            this.fileSize = sizeInMB > 1 ? `${sizeInMB} MB` : `${sizeInKB} KB`;
+
+            // Get file type
+            this.fileType = file.type || 'Unknown type';
+
+            // Check if it's an image
+            this.isImage = file.type.startsWith('image/');
+
+            // Create preview for images
+            if (this.isImage) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.filePreview = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                this.filePreview = null;
+            }
+        },
+
+        removeFile() {
+            this.selectedFile = null;
+            this.filePreview = null;
+            this.isImage = false;
+            this.fileSize = '';
+            this.fileType = '';
+
+            // Reset the file input
+            const fileInput = document.getElementById('file');
+            if (fileInput) {
+                fileInput.value = '';
+            }
+        }
+    };
+}
+</script>
+
+{% endblock %}

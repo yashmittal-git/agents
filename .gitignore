@@ -50,6 +50,13 @@ email_drafts/
 !package.json
 !**/setup.json
 
+# Web app uploads and generated files
+uploads/
+web-app/uploads/
+*.db
+*.sqlite
+*.sqlite3
+
 # Logs
 *.log
 
@@ -63,3 +70,13 @@ htmlcov/
 .DS_Store
 .AppleDouble
 .LSOverride
+
+# Docker
+docker-compose.override.yml
+
+# Flask-Migrate (optional - comment if you want to commit migrations)
+# web-app/migrations/versions/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid

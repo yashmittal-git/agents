@@ -1,0 +1,397 @@
+{% extends "base.html" %}
+
+{% block title %}{{ job.company_name }} - {{ job.role }} - Job Outreach{% endblock %}
+
+{% block extra_head %}
+<style>
+/* Email Preview Styling */
+.email-preview-content {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #374151;
+}
+
+.email-preview-content p {
+    margin: 0 0 1em 0;
+}
+
+.email-preview-content ul {
+    list-style-type: disc;
+    margin: 1em 0;
+    padding-left: 2em;
+}
+
+.email-preview-content ol {
+    list-style-type: decimal;
+    margin: 1em 0;
+    padding-left: 2em;
+}
+
+.email-preview-content li {
+    margin: 0.5em 0;
+}
+
+.email-preview-content strong {
+    font-weight: 600;
+    color: #111827;
+}
+
+.email-preview-content a {
+    color: #2563eb;
+    text-decoration: underline;
+}
+
+.email-preview-content br {
+    display: block;
+    content: "";
+    margin: 0.5em 0;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="py-10" x-data="jobDetail({{ job.id }}, '{{ job.status }}')">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="md:flex md:items-center md:justify-between mb-8">
+            <div class="min-w-0 flex-1">
+                <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+                    <span x-text="jobData.company_name || 'Processing...'">{{ job.company_name or 'Processing...' }}</span>
+                </h2>
+                <p class="mt-1 text-sm text-gray-500">
+                    <span x-text="jobData.role || 'Unknown Role'">{{ job.role or 'Unknown Role' }}</span>
+                </p>
+            </div>
+            <div class="mt-4 flex md:ml-4 md:mt-0 space-x-3">
+                <a href="{{ url_for('jobs.job_list') }}"
+                   class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                    Back to List
+                </a>
+                <form method="POST" action="{{ url_for('jobs.delete_job', job_id=job.id) }}" onsubmit="return confirm('Are you sure you want to delete this job?');">
+                    <button type="submit"
+                            class="inline-flex items-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500">
+                        Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Status Banner -->
+        <div class="mb-6">
+            <div x-show="jobData.status === 'pending' || jobData.status === 'extracting' || jobData.status === 'researching' || jobData.status === 'generating'"
+                 class="rounded-md bg-yellow-50 p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-yellow-400 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-yellow-800">
+                            Processing job posting...
+                        </h3>
+                        <div class="mt-2 text-sm text-yellow-700">
+                            <p>Status: <span class="font-semibold capitalize" x-text="jobData.status"></span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="jobData.status === 'failed'" class="rounded-md bg-red-50 p-4">
+                <div class="flex">
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">Processing failed</h3>
+                        <div class="mt-2 text-sm text-red-700">
+                            <p x-text="jobData.error_message"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Job Information -->
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-3 mb-6">
+            <div class="lg:col-span-2">
+                <!-- Draft Content -->
+                <div x-show="jobData.status === 'drafted'" class="bg-white shadow sm:rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-medium leading-6 text-gray-900">
+                                Draft Email
+                            </h3>
+                            {% if draft %}
+                            <div class="flex items-center space-x-3">
+                                <span x-show="draftEdited" class="text-sm text-gray-500 italic">Draft has been edited</span>
+                                <button @click="saveDraft"
+                                        class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                                    Save Changes
+                                </button>
+                                <button @click="sendEmail" :disabled="sending"
+                                        class="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50">
+                                    <span x-show="!sending">Send Email</span>
+                                    <span x-show="sending">Sending...</span>
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        {% if draft %}
+                        <!-- Vertical Stack: Editor on Top, Preview on Bottom -->
+                        <div class="space-y-6">
+                            <!-- Editor Section -->
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="subject" class="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                                    <input type="text" id="subject" x-model="draftSubject"
+                                           @input="draftEdited = true"
+                                           class="block w-full rounded-md border border-gray-300 py-1.5 px-3 shadow-sm sm:text-sm">
+                                </div>
+
+                                <div>
+                                    <label for="body" class="block text-sm font-medium text-gray-700 mb-2">Body (HTML)</label>
+                                    <textarea id="body" rows="15" x-model="draftBody"
+                                              @input="draftEdited = true"
+                                              class="block w-full rounded-md border border-gray-300 py-1.5 px-3 shadow-sm sm:text-sm font-mono text-xs"
+                                              style="resize: vertical;"></textarea>
+                                    <p class="mt-1 text-xs text-gray-500">Edit the HTML directly. Use &lt;strong&gt; for bold, &lt;ul&gt;&lt;li&gt; for bullet lists.</p>
+                                </div>
+                            </div>
+
+                            <!-- Preview Section -->
+                            <div>
+                                <div class="flex items-center justify-between mb-3">
+                                    <label class="block text-base font-medium text-gray-900">📧 Email Preview</label>
+                                    <span class="text-xs text-gray-500">How it will look to recipients (updates as you type)</span>
+                                </div>
+                                <div class="border-2 border-indigo-200 rounded-lg p-8 bg-gray-50">
+                                    <!-- Email Preview Container -->
+                                    <div class="bg-white rounded-lg shadow-sm p-6 space-y-4">
+                                        <!-- Subject Preview -->
+                                        <div class="pb-3 border-b border-gray-200">
+                                            <div class="text-xs text-gray-500 mb-1">Subject:</div>
+                                            <div class="font-semibold text-gray-900 text-base" x-text="draftSubject"></div>
+                                        </div>
+
+                                        <!-- Body Preview with proper list styling -->
+                                        <div class="email-preview-content">
+                                            <div x-html="draftBody"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <p class="text-sm text-gray-500">Draft will appear here once processing is complete.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Sent Confirmation -->
+                <div x-show="jobData.status === 'sent'" class="bg-white shadow sm:rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+                        <div class="rounded-md bg-green-50 p-4">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div class="ml-3">
+                                    <h3 class="text-sm font-medium text-green-800">Email sent successfully!</h3>
+                                    <div class="mt-2 text-sm text-green-700">
+                                        <p>Your outreach email has been sent. Check your inbox for the BCC copy.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="lg:col-span-1">
+                <!-- Job Details -->
+                <div class="bg-white shadow sm:rounded-lg mb-6">
+                    <div class="px-4 py-5 sm:p-6">
+                        <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Job Details</h3>
+                        <dl class="space-y-3">
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Source</dt>
+                                <dd class="mt-1 text-sm text-gray-900">
+                                    <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 capitalize" x-text="jobData.source_type"></span>
+                                    <span class="ml-2 text-xs text-gray-500" x-show="jobData.source_file" x-text="jobData.source_file?.split('/').pop() || jobData.source_file"></span>
+                                </dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Company</dt>
+                                <dd class="mt-1 text-sm text-gray-900" x-text="jobData.company_name || 'Extracting...'"></dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Role</dt>
+                                <dd class="mt-1 text-sm text-gray-900" x-text="jobData.role || (jobData.status === 'pending' || jobData.status === 'extracting' ? 'Extracting...' : 'N/A')"></dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Recruiter</dt>
+                                <dd class="mt-1 text-sm text-gray-900" x-text="jobData.recruiter_name || (jobData.status === 'pending' || jobData.status === 'extracting' ? 'Extracting...' : 'N/A')"></dd>
+                            </div>
+                            <div x-show="jobData.recruiter_emails && jobData.recruiter_emails.length > 0">
+                                <dt class="text-sm font-medium text-gray-500">Email</dt>
+                                <dd class="mt-1 text-sm text-gray-900">
+                                    <template x-for="email in jobData.recruiter_emails" :key="email">
+                                        <div x-text="email"></div>
+                                    </template>
+                                </dd>
+                            </div>
+                            <div x-show="jobData.recruiter_linkedin">
+                                <dt class="text-sm font-medium text-gray-500">LinkedIn</dt>
+                                <dd class="mt-1 text-sm text-gray-900">
+                                    <a :href="jobData.recruiter_linkedin" target="_blank" class="text-indigo-600 hover:text-indigo-500">
+                                        View Profile
+                                    </a>
+                                </dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Source</dt>
+                                <dd class="mt-1 text-sm text-gray-900 capitalize" x-text="jobData.source_type"></dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Created</dt>
+                                <dd class="mt-1 text-sm text-gray-900">{{ job.created_at | datetime('%b %d, %Y %H:%M') }}</dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- User Context -->
+                <div x-show="jobData.user_context" class="bg-white shadow sm:rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+                        <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Your Notes</h3>
+                        <p class="text-sm text-gray-700" x-text="jobData.user_context"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function jobDetail(jobId, initialStatus) {
+    return {
+        jobId: jobId,
+        jobData: { status: initialStatus },
+        draftId: {{ draft.id if draft else 'null' }},
+        draftSubject: '{{ draft.subject if draft else '' }}',
+        draftBody: {{ draft.body_text | tojson if draft else '""' }},
+        draftEdited: false,
+        sending: false,
+        pollInterval: null,
+
+        init() {
+            this.fetchJobStatus();
+            // Poll for updates if job is processing
+            if (this.isProcessing()) {
+                this.startPolling();
+            }
+
+            // Watch for changes to draft
+            this.$watch('draftSubject', () => { this.draftEdited = true; });
+            this.$watch('draftBody', () => { this.draftEdited = true; });
+        },
+
+        isProcessing() {
+            return ['pending', 'extracting', 'researching', 'generating'].includes(this.jobData.status);
+        },
+
+        startPolling() {
+            this.pollInterval = setInterval(() => {
+                this.fetchJobStatus();
+            }, 2000);
+        },
+
+        stopPolling() {
+            if (this.pollInterval) {
+                clearInterval(this.pollInterval);
+                this.pollInterval = null;
+            }
+        },
+
+        async fetchJobStatus() {
+            try {
+                const response = await fetch(`/api/jobs/${this.jobId}/status`);
+                const data = await response.json();
+                this.jobData = data;
+
+                // Update draft if available
+                if (data.drafts && data.drafts.length > 0) {
+                    const draft = data.drafts[0];
+                    this.draftId = draft.id;
+                    if (!this.draftEdited) {
+                        this.draftSubject = draft.subject;
+                        this.draftBody = draft.body_text;
+                    }
+                }
+
+                // Stop polling if done processing
+                if (!this.isProcessing()) {
+                    this.stopPolling();
+                }
+            } catch (error) {
+                console.error('Error fetching job status:', error);
+            }
+        },
+
+        async saveDraft() {
+            if (!this.draftId) return;
+
+            try {
+                const response = await fetch(`/api/drafts/${this.draftId}/update`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        subject: this.draftSubject,
+                        body_text: this.draftBody
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Draft saved successfully!');
+                    this.draftEdited = false;
+                } else {
+                    alert('Failed to save draft');
+                }
+            } catch (error) {
+                console.error('Error saving draft:', error);
+                alert('Error saving draft');
+            }
+        },
+
+        async sendEmail() {
+            if (!this.draftId) return;
+            if (!confirm('Are you sure you want to send this email?')) return;
+
+            this.sending = true;
+            try {
+                const response = await fetch(`/api/drafts/${this.draftId}/send`, {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    alert('Email sent successfully!');
+                    this.fetchJobStatus();
+                } else {
+                    alert('Failed to send email: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error sending email:', error);
+                alert('Error sending email');
+            } finally {
+                this.sending = false;
+            }
+        }
+    };
+}
+</script>
+{% endblock %}

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a **monorepo** containing 6 modular AI agent services for job outreach automation:
+This is a **monorepo** containing 6 modular AI agent services + web application for job outreach automation:
 
 - **extraction-agent** - Universal content extraction using GPT-4o Vision (images, PDFs, URLs, text)
 - **email-agent** - Gmail API email sending service
@@ -12,8 +12,9 @@ This is a **monorepo** containing 6 modular AI agent services for job outreach a
 - **content-agent** - AI content generation (emails, messages)
 - **linkedin-agent** - LinkedIn messaging guidance (placeholder - no public API)
 - **job-outreach-agent** - Orchestrator that intelligently coordinates all 5 agents above
+- **web-app** - 🆕 Full-stack web application with async processing (Flask, Celery, PostgreSQL, Docker)
 
-Each agent is an independent Python package that can be used standalone or together.
+Each agent is an independent Python package that can be used standalone or together. The web app provides a UI for all agents.
 
 ## Purpose & Use Case
 
@@ -55,6 +56,69 @@ This system is built for **personal job search automation** to ease the process 
 
 ### Key Design Principle
 **Semi-automated with human approval** - The system generates content and recommends actions, but the user always reviews and confirms before anything is sent. This maintains personal touch and prevents automated mistakes.
+
+## Web Application
+
+**Full-stack web UI** providing async job processing with database persistence. Accessible at http://localhost:5001 (port changed from 5000 to avoid macOS Control Center conflict).
+
+**Key Features**:
+- Upload interface for images, PDFs, text, URLs
+- Async processing via Celery workers (background tasks)
+- Real-time status updates (polls every 2 seconds)
+- Draft editor with save functionality
+- One-click email sending
+- Job history with search and filters
+- Company research caching (7-day TTL for cost optimization)
+
+**Architecture**:
+```
+Flask (5001) → RabbitMQ → Celery Workers (4) → Agents → PostgreSQL + Redis
+```
+
+**Services** (managed by docker-compose.yml):
+- **web**: Flask app (Gunicorn with 4 workers)
+- **celery**: Celery workers (4 workers for async tasks)
+- **celery-beat**: Celery scheduler (optional)
+- **db**: PostgreSQL 15 (job/draft persistence, company cache)
+- **redis**: Redis 7 (sessions, caching)
+- **rabbitmq**: RabbitMQ 3 (message broker + management UI on port 15672)
+
+**Starting the web app**:
+```bash
+docker-compose up -d                    # Start all services
+docker-compose logs -f web celery       # View logs
+docker-compose ps                       # Check status
+docker-compose down -v                  # Stop and reset
+```
+
+**Database tables** (SQLAlchemy models in `web-app/app/models.py`):
+- `job`: Tracks applications (source, extracted info, status, task_id, error_message)
+- `draft`: Email/message drafts (channel, content, edit tracking, send status)
+- `company_research`: Cached research data (expires after 7 days)
+
+**Key implementation details**:
+- Zero modifications to existing agents - web app imports them directly
+- Tables created with `db.create_all()` (Flask-Migrate setup pending)
+- DATABASE_URL uses `?sslmode=disable` for PostgreSQL Alpine compatibility
+- Celery tasks in `web-app/app/tasks.py`: `process_job_task()`, `send_email_task()`
+- Real-time updates via `/api/jobs/<id>/status` polling endpoint
+- Dockerfile copies all agents during build and installs them in image
+
+**Common operations**:
+```bash
+# Modify web app code
+docker-compose build web celery
+docker-compose restart web celery
+
+# Recreate database tables
+docker-compose exec web python -c "from app import create_app; from app.database import db; app=create_app(); app.app_context().push(); db.drop_all(); db.create_all()"
+
+# View specific logs
+docker-compose logs -f web
+docker-compose logs -f celery
+```
+
+**Documentation**: See `web-app/.claude/README.md` for detailed web app context.
 
 ## Development Environment
 
@@ -133,9 +197,15 @@ cd job-outreach-agent && python example_usage.py
 
 **Note:** All tests assume venv is activated. They will fail with import errors otherwise.
 
-## Job Outreach CLI
+## Job Outreach Usage
 
-The main CLI is `job-outreach-agent/job_outreach_cli.py`. It can process screenshots, text files, or URLs:
+There are **two ways** to use the job outreach system:
+
+### Option 1: Web Application (Recommended)
+Use the web UI at http://localhost:5001 (see "Web Application" section above). Provides async processing, job history, and better UX.
+
+### Option 2: CLI
+The CLI (`job-outreach-agent/job_outreach_cli.py`) processes jobs synchronously and saves drafts as JSON files. It can process screenshots, text files, or URLs:
 
 ```bash
 # Activate venv first
@@ -231,15 +301,18 @@ from job_outreach_agent import JobOrchestrator
 
 - Shared credentials: `credentials.json`, `token.json` (root directory)
 - Environment config: `.env` (root directory)
-- Draft outputs: `job-outreach-agent/outreach_drafts/`
+- Draft outputs (CLI): `job-outreach-agent/outreach_drafts/`
+- Draft outputs (web): Database (PostgreSQL) + `uploads/` directory
 - Example usage: `job-outreach-agent/example_usage.py`
+- Web app: `web-app/` directory (separate Flask application)
+- Docker config: `docker-compose.yml` (root directory)
 
 ## Documentation Maintenance
 
 ### When to Update Documentation
 
-Each agent has its own `CLAUDE.md` and `README.md`:
-- **CLAUDE.md**: For future Claude instances (architecture, development workflows, critical context)
+Each agent and the web app have their own documentation:
+- **CLAUDE.md** / **.claude/README.md**: For future Claude instances (architecture, development workflows, critical context)
 - **README.md**: For human users (API reference, usage examples, setup instructions)
 
 **When making changes, always consider:**
@@ -249,8 +322,9 @@ Each agent has its own `CLAUDE.md` and `README.md`:
 
 **Which files to update:**
 - Root-level changes → Update `/CLAUDE.md` and/or `/README.md`
-- Agent-specific changes → Update `{agent}/CLAUDE.md` and/or `{agent}/README.md`
-- Cross-cutting features → Update root + affected agents
+- Agent-specific changes → Update `{agent}/.claude/README.md` and/or `{agent}/README.md`
+- Web app changes → Update `web-app/.claude/README.md` and/or `web-app/README.md`
+- Cross-cutting features → Update root + affected agents/web-app
 
 ### Documentation Quality Standards
 

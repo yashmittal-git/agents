@@ -1,0 +1,137 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: joboutreach
+      POSTGRES_USER: joboutreach
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U joboutreach"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Flask Web Application
+  web:
+    build:
+      context: .
+      dockerfile: web-app/Dockerfile
+    ports:
+      - "5001:5000"  # Using 5001 externally to avoid conflict with macOS Control Center
+    environment:
+      - FLASK_ENV=development
+      - DATABASE_URL=postgresql://joboutreach:password@db:5432/joboutreach?sslmode=disable
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - USER_EMAIL=${USER_EMAIL}
+      - USER_NAME=${USER_NAME}
+    volumes:
+      - ./uploads:/app/uploads
+      - ./credentials.json:/app/credentials.json:ro
+      - ./token.json:/app/token.json
+      # Agents are now baked into the Docker image during build
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Celery Worker
+  celery:
+    build:
+      context: .
+      dockerfile: web-app/Dockerfile
+    command: celery -A worker.celery_app worker --loglevel=info --concurrency=4
+    environment:
+      - FLASK_ENV=development
+      - DATABASE_URL=postgresql://joboutreach:password@db:5432/joboutreach?sslmode=disable
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - USER_EMAIL=${USER_EMAIL}
+      - USER_NAME=${USER_NAME}
+    volumes:
+      - ./uploads:/app/uploads
+      - ./credentials.json:/app/credentials.json:ro
+      - ./token.json:/app/token.json
+      # Agents are now baked into the Docker image during build
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Celery Beat (optional - for scheduled tasks)
+  celery-beat:
+    build:
+      context: .
+      dockerfile: web-app/Dockerfile
+    command: celery -A worker.celery_app beat --loglevel=info
+    environment:
+      - FLASK_ENV=development
+      - DATABASE_URL=postgresql://joboutreach:password@db:5432/joboutreach
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+    volumes:
+      - ./uploads:/app/uploads
+      # Mount agents as editable
+      - ./extraction-agent:/agents/extraction-agent:ro
+      - ./email-agent:/agents/email-agent:ro
+      - ./research-agent:/agents/research-agent:ro
+      - ./content-agent:/agents/content-agent:ro
+      - ./linkedin-agent:/agents/linkedin-agent:ro
+      - ./job-outreach-agent:/agents/job-outreach-agent:ro
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
