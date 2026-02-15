@@ -297,9 +297,12 @@ class JobOrchestrator:
                 context={
                     "purpose": "job application",
                     "role": job_info.get('role'),
+                    "specific_interest": "Tech and Engineering leadership roles" if "leadership" in job_info.get('role', '').lower() else job_info.get('role'),
+                    "job_source": job_info.get('source', 'your job posting'),  # e.g., "your LinkedIn post"
                     "company_info": company_research.get('what_they_build'),
                     "tech_stack": company_research.get('tech_stack'),
-                    "candidate_highlights": experience_match.get('relevant_experience')
+                    "candidate_highlights": experience_match.get('relevant_experience'),
+                    "latest_project_focus": "AI Voicebot platform with sub-second latency, scaled to 300K+ calls/day"
                 },
                 sender_info=self.user_profile,
                 max_words=250,
@@ -380,11 +383,23 @@ class JobOrchestrator:
                 print("❌ No recipient email addresses found")
                 return False
 
+            # Always BCC sender's email for record keeping
+            bcc_email = self.user_profile.get('email')
+
+            # Check if content has HTML formatting
+            is_html = content.get('is_html', False)
+            email_body = content.get('body_html', content.get('body'))
+
             success = self.email_agent.send(
                 to=to_emails if len(to_emails) > 1 else to_emails[0],  # Pass list if multiple, string if single
                 subject=content['subject'],
-                body=content['body']
+                body=email_body,
+                bcc=bcc_email,  # Add sender to BCC
+                is_html=is_html  # Support HTML formatting
             )
+
+            if success and bcc_email:
+                print(f"📋 BCC: {bcc_email} (you'll receive a copy)")
 
             return success
 

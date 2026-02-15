@@ -140,20 +140,51 @@ Recipient:
 Context:
 {json.dumps(context, indent=2)}
 
-Requirements:
-1. Maximum {max_words} words (body only, excluding signature)
-2. Professional and engaging tone
-3. Clear subject line
-4. Personalized content showing research/understanding
-5. Clear call-to-action
-6. {"Include sender signature" if include_signature else "No signature needed"}
+{f'''Sender Info:
+{json.dumps(sender_info, indent=2)}''' if sender_info else ""}
 
-{f'''Sender Info (for signature):
-{json.dumps(sender_info, indent=2)}''' if sender_info and include_signature else ""}
+CRITICAL REQUIREMENTS:
+1. Maximum {max_words} words (body only, excluding signature)
+2. Professional and confident tone, but natural (not AI-generated sounding)
+3. Clear and specific subject line
+
+4. SALUTATION:
+   - If recipient name is provided, use: "Hi [Name] & Hiring Team,"
+   - Otherwise use: "Dear Hiring Team,"
+   - NEVER use generic "Dear Hiring Team at [Company]" if name is available
+
+5. OPENING PARAGRAPH:
+   - Mention WHERE you found the job posting (e.g., "I came across your LinkedIn post" or "I saw your job posting")
+   - This makes the email feel authentic and contextual
+   - Specify the EXACT role/department you're interested in (if role is generic like "Leadership Talent", clarify you're interested in "Tech and Engineering leadership roles")
+
+6. CONTENT FOCUS:
+   - Personalize intro showing you researched the company (mention their products/tech stack)
+   - Highlight ONLY the most relevant experience from sender's LATEST projects (prioritize recent work like "AI Voicebot")
+   - Do NOT list all experiences - focus on 2-3 key relevant achievements
+   - Connect your experience directly to what the company does
+
+7. FORMATTING:
+   - Use HTML formatting for better readability
+   - Use <strong> tags to emphasize key achievements (e.g., numbers, metrics, company names)
+   - Use bullet points (• or -) when listing multiple achievements under one project
+   - Example: "Recently, I led development of an AI Voicebot platform with:
+     • <strong>Sub-second latency</strong> across conversational flows
+     • Scaled to <strong>300K+ automated calls/day</strong>
+     • <strong>45% cost reduction</strong> in TTS/LLM operations"
+   - Keep formatting subtle and professional - don't overuse bold
+
+8. SIGNATURE:
+   - DO NOT include any signature, closing, or contact info
+   - DO NOT write "Best regards", "Sincerely", name, email, phone, etc.
+   - The body should END with the call-to-action or closing sentence
+   - Signature will be added programmatically - DO NOT DUPLICATE IT
+
+9. Clear call-to-action (suggest scheduling a conversation)
 
 Return JSON with:
-- subject: Compelling subject line
-- body: Email body (without signature if signature will be added separately)"""
+- subject: Specific, compelling subject line (not generic)
+- body_html: Email body in HTML format with <strong> tags and bullet points (ENDS AFTER call-to-action, NO SIGNATURE OR CLOSING)"""
 
         try:
             response = self.client.chat.completions.create(
@@ -161,7 +192,7 @@ Return JSON with:
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are an expert at writing compelling, personalized professional emails."
+                        "content": "You are an expert at writing compelling, personalized professional emails for job applications. Your emails sound natural and human-written, not AI-generated. You NEVER include signatures or closing statements - those are added separately. You focus on the candidate's most recent and relevant experience, making strong connections to the company's work."
                     },
                     {
                         "role": "user",
@@ -173,17 +204,32 @@ Return JSON with:
 
             result = json.loads(response.choices[0].message.content)
 
+            # Handle both body_html (new) and body (old) formats
+            if 'body_html' in result:
+                body_content = result['body_html']
+                is_html = True
+            else:
+                body_content = result.get('body', '')
+                is_html = False
+
             # Add signature if requested
             if include_signature and sender_info:
-                signature = self._format_signature(sender_info)
-                result['body'] = f"{result['body']}\n\n{signature}"
+                signature = self._format_signature_html(sender_info) if is_html else self._format_signature(sender_info)
+                body_content = f"{body_content}\n\n{signature}"
+
+            # Store both formats
+            result['body'] = body_content
+            result['body_html'] = body_content
+            result['is_html'] = is_html
 
             return result
 
         except Exception as e:
             return {
                 "subject": "Email Subject",
-                "body": f"Error generating email: {str(e)}"
+                "body": f"Error generating email: {str(e)}",
+                "body_html": f"<p>Error generating email: {str(e)}</p>",
+                "is_html": False
             }
 
     def generate_linkedin_message(
@@ -372,7 +418,7 @@ Return just the post text (no JSON)."""
             return f"Error generating post: {str(e)}"
 
     def _format_signature(self, sender_info: Dict[str, str]) -> str:
-        """Format email signature from sender info"""
+        """Format email signature from sender info (plain text)"""
         signature_parts = ["Best regards,"]
 
         if sender_info.get("name"):
@@ -391,6 +437,32 @@ Return just the post text (no JSON)."""
             signature_parts.append(f"Portfolio: {sender_info['portfolio']}")
 
         return "\n".join(signature_parts)
+
+    def _format_signature_html(self, sender_info: Dict[str, str]) -> str:
+        """Format email signature from sender info (HTML)"""
+        signature_html = "<p>Best regards,<br>"
+
+        if sender_info.get("name"):
+            signature_html += f"<strong>{sender_info['name']}</strong><br>"
+
+        if sender_info.get("email"):
+            signature_html += f"{sender_info['email']}<br>"
+
+        if sender_info.get("phone"):
+            signature_html += f"{sender_info['phone']}<br>"
+
+        if sender_info.get("linkedin"):
+            linkedin_url = sender_info['linkedin']
+            if not linkedin_url.startswith('http'):
+                linkedin_url = f"https://{linkedin_url}"
+            signature_html += f'LinkedIn: <a href="{linkedin_url}">{sender_info["linkedin"]}</a><br>'
+
+        if sender_info.get("portfolio"):
+            portfolio_url = sender_info['portfolio']
+            signature_html += f'Portfolio: <a href="{portfolio_url}">{portfolio_url}</a><br>'
+
+        signature_html += "</p>"
+        return signature_html
 
 
 def main():

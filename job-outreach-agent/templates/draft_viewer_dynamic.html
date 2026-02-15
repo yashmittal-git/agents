@@ -139,9 +139,35 @@
         }
 
         .email-body {
-            white-space: pre-wrap;
             line-height: 1.8;
             color: #374151;
+        }
+
+        .email-body p {
+            margin: 0 0 1em 0;
+        }
+
+        .email-body ul {
+            margin: 1em 0;
+            padding-left: 25px;
+        }
+
+        .email-body li {
+            margin: 0.5em 0;
+        }
+
+        .email-body strong {
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .email-body a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .email-body a:hover {
+            text-decoration: underline;
         }
 
         .actions {
@@ -387,6 +413,9 @@
 
             const confidence = Math.round((channelRec.confidence || 0.9) * 100);
 
+            // Get email body (prefer HTML version)
+            const emailBody = content.body_html || content.body || 'N/A';
+
             const html = `
                 <div class="header">
                     <h1>🚀 Job Outreach Draft Ready</h1>
@@ -469,7 +498,7 @@
                             <div class="email-subject">
                                 <strong>Subject:</strong> ${content.subject || 'N/A'}
                             </div>
-                            <div class="email-body">${content.body || 'N/A'}</div>
+                            <div class="email-body" id="email-body-content"></div>
                         </div>
                     </div>
 
@@ -520,6 +549,12 @@
             `;
 
             document.getElementById('app').innerHTML = html;
+
+            // Set email body as HTML (to properly render formatting)
+            const emailBodyElement = document.getElementById('email-body-content');
+            if (emailBodyElement && emailBody) {
+                emailBodyElement.innerHTML = emailBody;
+            }
         }
 
         function sendDraft() {

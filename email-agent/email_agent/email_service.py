@@ -131,7 +131,9 @@ class EmailService:
         subject: str,
         body: str,
         from_email: Optional[str] = None,
-        from_name: Optional[str] = None
+        from_name: Optional[str] = None,
+        bcc: Optional[Union[str, List[str]]] = None,
+        is_html: bool = False
     ) -> dict:
         """
         Create email message
@@ -139,9 +141,11 @@ class EmailService:
         Args:
             to: Recipient email(s) - can be a string or list of strings
             subject: Email subject
-            body: Email body
+            body: Email body (plain text or HTML)
             from_email: Sender email (defaults to sender_email from init)
             from_name: Sender name (defaults to sender_name from init)
+            bcc: BCC recipient(s) - can be a string or list of strings
+            is_html: Whether body is HTML formatted
 
         Returns:
             Email message dict ready to send
@@ -162,10 +166,29 @@ class EmailService:
         else:
             message['From'] = sender
 
+        # Add BCC if provided
+        if bcc:
+            if isinstance(bcc, list):
+                message['Bcc'] = ', '.join(bcc)
+            else:
+                message['Bcc'] = bcc
+
         message['Subject'] = subject
 
-        # Add body
-        msg_body = MIMEText(body, 'plain')
+        # Add body (HTML or plain text)
+        body_type = 'html' if is_html else 'plain'
+        # Convert simple formatting to proper HTML if needed
+        if is_html and '<html>' not in body.lower():
+            # Wrap in basic HTML structure if not already wrapped
+            formatted_body = f"""<html>
+<head></head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+{body}
+</body>
+</html>"""
+            msg_body = MIMEText(formatted_body, body_type)
+        else:
+            msg_body = MIMEText(body, body_type)
         message.attach(msg_body)
 
         # Encode message
@@ -178,7 +201,9 @@ class EmailService:
         subject: str,
         body: str,
         from_email: Optional[str] = None,
-        from_name: Optional[str] = None
+        from_name: Optional[str] = None,
+        bcc: Optional[Union[str, List[str]]] = None,
+        is_html: bool = False
     ) -> bool:
         """
         Send email via Gmail API
@@ -186,9 +211,11 @@ class EmailService:
         Args:
             to: Recipient email(s) - can be a string or list of strings
             subject: Email subject
-            body: Email body
+            body: Email body (plain text or HTML)
             from_email: Sender email (optional)
             from_name: Sender name (optional)
+            bcc: BCC recipient(s) - can be a string or list of strings (optional)
+            is_html: Whether body is HTML formatted (optional)
 
         Returns:
             bool: True if email sent successfully
@@ -199,7 +226,7 @@ class EmailService:
                 return False
 
         try:
-            message = self.create_message(to, subject, body, from_email, from_name)
+            message = self.create_message(to, subject, body, from_email, from_name, bcc, is_html)
             sent_message = self.service.users().messages().send(
                 userId='me',
                 body=message

@@ -38,14 +38,15 @@ def extract_from_image(image_path: str, openai_api_key: str) -> dict:
         "recruiter_emails": "All recruiter/contact emails visible (as comma-separated list, or null if none)",
         "recruiter_linkedin": "LinkedIn profile URL (if visible, else null)",
         "recruiter_name": "Recruiter name (if visible, else null)",
-        "requirements": "Job requirements (as string)"
+        "requirements": "Job requirements (as string)",
+        "source_platform": "Platform/source of this job post (e.g., 'LinkedIn', 'WhatsApp', 'Email', 'Website')"
     }
 
     result = extractor.extract(
         content=image_path,
         content_type="image",
         schema=schema,
-        instructions="Extract job posting information from this image. IMPORTANT: Extract ALL visible email addresses, not just one."
+        instructions="Extract job posting information from this image. IMPORTANT: Extract ALL visible email addresses, not just one. Also identify what platform this job post is from (look for visual clues like LinkedIn UI, WhatsApp interface, etc.)"
     )
 
     # Convert comma-separated emails to list and set primary
@@ -56,6 +57,19 @@ def extract_from_image(image_path: str, openai_api_key: str) -> dict:
     else:
         result['recruiter_email'] = None
         result['all_emails'] = []
+
+    # Format source for natural language
+    source_platform = result.get('source_platform', '').lower()
+    if 'linkedin' in source_platform:
+        result['source'] = 'your LinkedIn post'
+    elif 'whatsapp' in source_platform:
+        result['source'] = 'your WhatsApp message'
+    elif 'email' in source_platform:
+        result['source'] = 'your email'
+    elif source_platform:
+        result['source'] = f'your {source_platform} post'
+    else:
+        result['source'] = 'your job posting'
 
     print(f"✓ Extracted: {result.get('company_name')} - {result.get('role')}")
 

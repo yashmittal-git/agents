@@ -80,6 +80,8 @@ pip install -e job-outreach-agent
 - `recruiter_linkedin`: Optional LinkedIn URL
 - `requirements`: Job requirements/description
 
+**Important:** All emails automatically BCC the sender's email (from user_profile) for record keeping.
+
 **Workflow:**
 1. **Research** company (delegates to research-agent)
 2. **Match** experience with job requirements (internal logic)

@@ -44,7 +44,7 @@ This system is built for **personal job search automation** to ease the process 
    - Provides manual instructions for channels requiring manual action (LinkedIn, WhatsApp)
 
 4. **Output**: Based on recommendation:
-   - **Email**: Creates formatted email → user confirms → auto-sends via Gmail API
+   - **Email**: Creates formatted email → user confirms → auto-sends via Gmail API (always BCCs user for record keeping)
    - **LinkedIn**: Generates message → provides step-by-step manual instructions
    - **WhatsApp**: Generates message → tells user to manually send
 
